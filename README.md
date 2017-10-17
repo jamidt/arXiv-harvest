@@ -6,10 +6,10 @@ Download meta data from the arXiv. As described on the help page of the [arXiv](
 ## Requirements
 
 This tool uses [requests](https://github.com/requests/requests) and
-Python3.
+Python 3.5 (I tend to use type annotations).
 
 
-## Download data
+## Usage
 ```
 python3 harvest.py q-bio math physics:cond-mat -d 4
 ```
@@ -17,6 +17,8 @@ downloads up to 4000 abstracts from each of the repos q-bio, math and
 physics:cond-mat and stores each in a json file, (e.g q-bio in
 q-bio.json).
 
+If the messages clutter the screen to much, adjust the logger level in
+logger_conf.json.
 
 ## License
 Copyright 2017 Jan Schmidt

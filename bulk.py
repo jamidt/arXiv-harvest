@@ -4,30 +4,9 @@ import time
 import json
 import logging.config
 import re
+import os.path
 
-__LOG_CONF = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "standard": {
-            "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-        }
-    },
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-            "formatter": "standard",
-            "level": "DEBUG",
-            "stream": "ext://sys.stdout"
-        }
-    },
-    "root": {
-        "level": "INFO",
-        "handlers": ["console"]
-    }
-}
 
-logging.config.dictConfig(__LOG_CONF)
 logger = logging.getLogger(__name__)
 
 
@@ -41,7 +20,8 @@ def xml2json(xml: ET.Element) -> (dict, str):
     for arxiv_entry in list_records.iter("{http://arxiv.org/OAI/arXiv/}arXiv"):
         id = arxiv_entry.find("{http://arxiv.org/OAI/arXiv/}id").text
         abstract = arxiv_entry.find("{http://arxiv.org/OAI/arXiv/}abstract").text
-        json_dict[id] = abstract
+        title = arxiv_entry.find("{http://arxiv.org/OAI/arXiv/}title").text
+        json_dict[id] = {"title": title, "abstract": abstract}
     token = list_records.find("{http://www.openarchives.org/OAI/2.0/}resumptionToken").text
     logger.info("Found token: {}".format(token))
     return json_dict, token
@@ -57,21 +37,30 @@ class ArXivRequestError(Exception):
 
 
 class ArXivRequest(object):
-    def __init__(self, depth: int=None, **kwargs):
-        if "token" in kwargs:
-            url = TOKEN_URL.format(token=kwargs["token"])
-        elif "field" in kwargs:
-            url = TOP_URL.format(field=kwargs["field"])
-        else:
-            msg = ", ".join(kwargs)
-            raise ArXivRequestError("Arguments wrong: {}".format(msg))
+    def __init__(self, field: str, depth: int=None, delay: int=10, write_tries: int=10):
+        self.write_tries = write_tries
+        url = TOP_URL.format(field=field)
 
         count = 0
         self.json_data = dict()
         token = 0
         while token is not None and count != depth:
             logger.info("Get url: {}".format(url))
-            req = requests.get(url)
+            try:
+                req = requests.get(url)
+            except Exception as err:
+                logger.error(err)
+                for i in range(self.write_tries):
+                    rescue_file = "resc-" + field + str(i) + ".json"
+                    if not os.path.exists(rescue_file):
+                        with open(rescue_file, "w") as fp:
+                            json.dump(self.json_data, fp)
+                        break
+                else:
+                    err_msg = "Can't write to rescue files after {} tries".format(self.write_tries)
+                    raise ArXivRequestError(err_msg)
+                logger.error("Writing all entries to file")
+
             logger.debug(req.url)
             if req.status_code == 503:
                 wait = get_delay(req.text) + 5
@@ -84,8 +73,25 @@ class ArXivRequest(object):
                 abstract_dict, token = xml2json(xml)
                 self.json_data.update(abstract_dict)
                 url = TOKEN_URL.format(token=token)
+                time.sleep(delay)
 
-    def save(self, filename):
-        logger.debug("Save to file {}".format(filename))
-        with open(filename, "w") as f:
+    def save(self, filename: str, mode: str="x"):
+        """
+        Write json to file. If mode 'x' is provided and file already exists, a number is appended to
+        the filename.
+        :param filename:
+        :param mode: Same as for open()
+        """
+        if os.path.exists(filename):
+            for i in range(self.write_tries):
+                appended_filename = filename + str(i)
+                if not os.path.exists(appended_filename):
+                    filename = appended_filename
+                    break
+            else:
+                err_msg = "Could not write to file after {} tries".format(self.write_tries)
+                logger.error(err_msg)
+                raise ArXivRequestError(err_msg)
+        logger.info("Save to file {}".format(filename))
+        with open(filename, mode) as f:
             json.dump(self.json_data, f)
