@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from bulk import ArXivRequest
+from bulk import ArXivIter, ArXiv2json
 import logging.config
 import argparse
 import json
@@ -30,18 +30,19 @@ logger = logging.getLogger(__name__)
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Download bulk of arXiv meta data")
     parser.add_argument("field", nargs='+', type=str)
-    parser.add_argument("--depth", "-d", default=None, metavar="D",
-                        help="Maximal number of search entries is D*1000", type=int)
+    parser.add_argument("--batches", "-b", default=None, metavar="B",
+                        help="Maximal number of pages to parse. The maximal number of entries is B*1000", type=int)
     parser.add_argument("--logconf", type=str, default="logger_conf.json", help="Config file for logger")
     parser.add_argument("--delay", help="Delay between requests", default=0, type=int)
     args = parser.parse_args()
 
-    logconf = open(args.logconf, "r")
-    jsonconf = json.load(logconf)
-    logging.config.dictConfig(jsonconf)
+    log_conf = open(args.logconf, "r")
+    json_conf = json.load(log_conf)
+    logging.config.dictConfig(json_conf)
 
     logger.info("Searching in {}".format(", ".join(args.field)))
     for field in args.field:
         logger.info("Field: {}".format(field))
-        req = ArXivRequest(field=field, depth=args.depth)
-        req.save("{}.json".format(field))
+        with ArXiv2json("{}.json".format(field)) as f:
+            for entry in ArXivIter(field, args.batches):
+                f.append(entry)
