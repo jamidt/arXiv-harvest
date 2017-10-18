@@ -23,10 +23,11 @@ def xml2json(xml: ET.Element) -> (dict, str):
     json_dict = dict()
     list_records = xml.find("{http://www.openarchives.org/OAI/2.0/}ListRecords")
     for arxiv_entry in list_records.iter("{http://arxiv.org/OAI/arXiv/}arXiv"):
-        id = arxiv_entry.find("{http://arxiv.org/OAI/arXiv/}id").text
+        arxiv_id = arxiv_entry.find("{http://arxiv.org/OAI/arXiv/}id").text
         abstract = arxiv_entry.find("{http://arxiv.org/OAI/arXiv/}abstract").text
         title = arxiv_entry.find("{http://arxiv.org/OAI/arXiv/}title").text
-        json_dict[id] = {"title": title, "abstract": abstract}
+        categories = arxiv_entry.find("{http://arxiv.org/OAI/arXiv/}categories").text.split()
+        json_dict[arxiv_id] = {"title": title, "abstract": abstract, "chategories": categories}
     token = list_records.find("{http://www.openarchives.org/OAI/2.0/}resumptionToken")
     if token is not None:
         token = token.text

@@ -11,7 +11,7 @@ Python 3.5 (I tend to use type annotations).
 
 ## Usage
 ```
-python3 harvest.py q-bio math physics:cond-mat -d 4
+python3 harvest.py q-bio math physics:cond-mat -b 4
 ```
 downloads up to 4000 abstracts from each of the repos q-bio, math, and
 physics:cond-mat and stores each in a json file, (e.g q-bio in
