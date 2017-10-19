@@ -1,5 +1,5 @@
 import requests
-import xml.etree.ElementTree as ET
+from xml.etree import ElementTree
 import time
 import json
 import logging.config
@@ -14,7 +14,7 @@ TOP_URL = "http://export.arxiv.org/oai2?verb=ListRecords&set={field}&metadataPre
 TOKEN_URL = "http://export.arxiv.org/oai2?verb=ListRecords&resumptionToken={token}"
 
 
-def xml2json(xml: ET.Element) -> (dict, str):
+def xml2json(xml: ElementTree.Element) -> (dict, str):
     """
     Parses the xml formated request
     :param xml:
@@ -50,11 +50,16 @@ class ArXivError(Exception):
 
 
 class ArXivIter(object):
-    def __init__(self, field: str, depth: int=None, write_tries: int=10):
-        logger.debug("Starging iterator in {}".format(field))
-        self.url = TOP_URL.format(field=field)
+    def __init__(self, field: str, batches: int=None, write_tries: int=10):
+        reg = re.findall("\d*\|\d*", field)
+        if reg:
+            logger.debug("Starting at token {}".format(field))
+            self.url = TOKEN_URL.format(token=field)
+        else:
+            logger.debug("Starting iterator in {}".format(field))
+            self.url = TOP_URL.format(field=field)
         self.write_tries = write_tries
-        self.depth = depth or -1
+        self.depth = batches or -1
         self.queue = Queue()
         self.count = 0
         self.token = 0
@@ -80,7 +85,7 @@ class ArXivIter(object):
                 req = requests.get(self.url)
 
             self.count += 1
-            xml = ET.fromstring(req.text)
+            xml = ElementTree.fromstring(req.text)
             abstract_dict, self.token = xml2json(xml)
 
             for arxiv_id, entry in abstract_dict.items():

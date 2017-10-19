@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Download bulk of arXiv meta data")
-    parser.add_argument("field", nargs='+', type=str)
+    parser.add_argument("field", nargs='+', help="Field or token to download", type=str)
     parser.add_argument("--batches", "-b", default=None, metavar="B",
                         help="Maximal number of pages to parse. The maximal number of entries is B*1000", type=int)
     parser.add_argument("--logconf", type=str, default="logger_conf.json", help="Config file for logger")
@@ -42,7 +42,8 @@ if __name__ == "__main__":
 
     logger.info("Searching in {}".format(", ".join(args.field)))
     for field in args.field:
+
         logger.info("Field: {}".format(field))
         with ArXiv2json("{}.json".format(field)) as f:
-            for entry in ArXivIter(field, args.batches):
+            for entry in ArXivIter(batches=args.batches, field=field):
                 f.append(entry)

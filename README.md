@@ -17,6 +17,15 @@ downloads up to 4000 abstracts from each of the repos q-bio, math, and
 physics:cond-mat and stores each in a json file, (e.g q-bio in
 q-bio.json).
 
+The program takes either the field from the arXiv (e.g
+physics:astro-ph, math, ...) or a previously identified token in the
+form `4789242|2001`. Remember to escape `|` in the terminal.
+
+```
+python3 harvest.py 4789242\|2001
+```
+downloads the entries starting at `2001`.
+
 If the messages clutter the screen to much, adjust the logger level in
 logger_conf.json.
 
