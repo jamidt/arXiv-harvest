@@ -33,7 +33,7 @@ if __name__ == "__main__":
     parser.add_argument("--batches", "-b", default=None, metavar="B",
                         help="Maximal number of pages to parse. The maximal number of entries is B*1000", type=int)
     parser.add_argument("--logconf", type=str, default="logger_conf.json", help="Config file for logger")
-    parser.add_argument("--delay", help="Delay between requests", default=0, type=int)
+    parser.add_argument("--delay", help="Delay between requests", default=10, type=int)
     args = parser.parse_args()
 
     log_conf = open(args.logconf, "r")
@@ -42,8 +42,7 @@ if __name__ == "__main__":
 
     logger.info("Searching in {}".format(", ".join(args.field)))
     for field in args.field:
-
         logger.info("Field: {}".format(field))
         with ArXiv2json("{}.json".format(field)) as f:
-            for entry in ArXivIter(batches=args.batches, field=field):
+            for entry in ArXivIter(batches=args.batches, field=field, delay=args.delay):
                 f.append(entry)

@@ -6,6 +6,7 @@ import logging.config
 import re
 import os.path
 from queue import Queue
+import math
 
 
 logger = logging.getLogger(__name__)
@@ -50,7 +51,7 @@ class ArXivError(Exception):
 
 
 class ArXivIter(object):
-    def __init__(self, field: str, batches: int=None, write_tries: int=10):
+    def __init__(self, field: str, delay: int, batches: int=None, write_tries: int=10):
         reg = re.findall("\d*\|\d*", field)
         if reg:
             logger.debug("Starting at token {}".format(field))
@@ -63,6 +64,8 @@ class ArXivIter(object):
         self.queue = Queue()
         self.count = 0
         self.token = 0
+        self.delay = delay
+        self.last_update = 0
 
     def __iter__(self):
         return self
@@ -73,7 +76,11 @@ class ArXivIter(object):
 
         elif self.token is not None and self.count != self.depth:
             try:
+                wait = time.time() - time.time() - self.delay
+                if wait < 0:
+                    time.sleep(math.fabs(wait))
                 req = requests.get(self.url)
+                self.last_update = time.time()
             except requests.RequestException as err:
                 logger.error(err)
                 raise ArXivError from err
