@@ -6,7 +6,8 @@ Download meta data from the arXiv. As described on the help page of the [arXiv](
 ## Requirements
 
 This tool uses [requests](https://github.com/requests/requests) and
-Python 3.5 (I tend to use type annotations).
+Python 3.5 (I tend to use type hints, otherwise it should be compatible
+to any other version of Python 3).
 
 
 ## Usage
