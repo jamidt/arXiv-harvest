@@ -26,6 +26,12 @@ python3 harvest.py 4789242\|2001
 ```
 downloads the entries starting at `2001`.
 
+The delay between two requests is set by default to 10 seconds, but can
+be adjusted with the `-d` parameter. ArXiv seems to block too frequent
+fired requests and return a 503. However, even if a request gets a 503
+response, the request will be resent after the time that is specified in
+the response.
+
 If the messages clutter the screen to much, adjust the logger level in
 logger_conf.json.
 

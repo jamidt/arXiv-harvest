@@ -17,7 +17,7 @@ TOKEN_URL = "http://export.arxiv.org/oai2?verb=ListRecords&resumptionToken={toke
 
 def xml2json(xml: ElementTree.Element) -> (dict, str):
     """
-    Parses the xml formated request
+    Parses the xml formatted request
     :param xml:
     :return: pair of a dictionary with all entries and if a token is found the string of the token and otherwise None
     """
@@ -28,7 +28,7 @@ def xml2json(xml: ElementTree.Element) -> (dict, str):
         abstract = arxiv_entry.find("{http://arxiv.org/OAI/arXiv/}abstract").text
         title = arxiv_entry.find("{http://arxiv.org/OAI/arXiv/}title").text
         categories = arxiv_entry.find("{http://arxiv.org/OAI/arXiv/}categories").text.split()
-        json_dict[arxiv_id] = {"title": title, "abstract": abstract, "chategories": categories}
+        json_dict[arxiv_id] = {"title": title, "abstract": abstract, "categories": categories}
     token = list_records.find("{http://www.openarchives.org/OAI/2.0/}resumptionToken")
     if token is not None:
         token = token.text
