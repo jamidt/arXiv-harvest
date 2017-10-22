@@ -124,14 +124,17 @@ class ArXiv2json(object):
         except FileExistsError as err:
             raise ArXivError from err
         self.is_first = True
+        self.file.write("{")
+
+    def close(self):
+        self.file.write("}")
+        self.file.close()
 
     def __enter__(self):
-        self.file.write("{")
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.file.write("}")
-        self.file.close()
+        self.close()
 
     def append(self, pair: (str, dict)):
         arxiv_id, values = pair
@@ -141,4 +144,3 @@ class ArXiv2json(object):
         else:
             put = ", " + put
         self.file.write(put)
-
