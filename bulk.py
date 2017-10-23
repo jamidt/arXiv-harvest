@@ -93,6 +93,9 @@ class ArXivIter(object):
 
             self.count += 1
             xml = ElementTree.fromstring(req.text)
+            error = xml.find("{http://www.openarchives.org/OAI/2.0/}error")
+            if error is not None:
+                raise ArXivError(error.text)
             abstract_dict, self.token = xml2json(xml)
 
             for arxiv_id, entry in abstract_dict.items():
